@@ -48,7 +48,7 @@ let currentInvoiceBlob = null;
 let notifEnabled = false;
 let deadlineWatcherInterval = null;
 
-const STORE_NAME = "صورتحساب"
+const STORE_NAME = "صورتحساب";
 const STORE_TAGLINE = "";
 
 const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
@@ -205,7 +205,7 @@ async function enableNotifications() {
       perm = await Notification.requestPermission();
     }
     if (perm !== "granted") {
-      showToast("اجازه نوتیفیکیشن داده نشد. از تنظیمات مرورگر اجازه بده.", "danger");
+      showToast("اجازه نوتیفیکیشن داده نشد", "danger");
       notifEnabled = false;
       saveNotifPref(false);
       updateNotifButtonUI();
@@ -283,7 +283,9 @@ async function registerSW() {
       } catch (err) {}
     }
     navigator.serviceWorker.addEventListener("message", handleSWMessage);
-  } catch (err) {}
+  } catch (err) {
+    console.warn("SW registration failed:", err);
+  }
 }
 
 function handleSWMessage(event) {
@@ -309,10 +311,8 @@ function tryInitDatepicker() {
   try {
     try {
       const oldInstance = jQuery(input).data("persianDatepicker");
-      if (oldInstance) {
-        jQuery(input).persianDatepicker("destroy");
-      }
-    } catch (e) { /* silent */ }
+      if (oldInstance) jQuery(input).persianDatepicker("destroy");
+    } catch (e) {}
 
     jQuery(input).persianDatepicker({
       format: "YYYY/MM/DD HH:mm",
@@ -340,10 +340,8 @@ function tryInitDatepicker() {
         submitButton: { enabled: true, text: { fa: "تأیید" } },
       },
       onSelect: function (unix) {
-        console.log("📅 onSelect fired:", unix);
         if (unix && !isNaN(unix)) {
           selectedDeadline = new Date(unix);
-          console.log("✅ selectedDeadline from onSelect:", selectedDeadline);
           updateClearDeadlineBtn(true);
         }
       },
@@ -364,23 +362,20 @@ const dpInterval = setInterval(() => {
   dpAttempts++;
   if (tryInitDatepicker() || dpAttempts > 20) {
     clearInterval(dpInterval);
-    if (!datepickerReady) console.warn("⚠️ Datepicker failed after 20 attempts");
   }
 }, 250);
 
 /* ============================================================
-   نظارت دائمی روی input تاریخ (backup)
+   نظارت روی input تاریخ
    ============================================================ */
 function startDeadlineWatcher() {
   if (!taskDeadlineInput) return;
-  if (deadlineWatcherInterval) return; // فقط یک بار اجرا بشه
+  if (deadlineWatcherInterval) return;
 
-  // 👇 event listener مستقیم برای تغییر input
   taskDeadlineInput.addEventListener("input", handleDeadlineInputChange);
   taskDeadlineInput.addEventListener("change", handleDeadlineInputChange);
   taskDeadlineInput.addEventListener("blur", handleDeadlineInputChange);
 
-  // 👇 polling هر ۵۰۰ms برای اطمینان بیشتر
   deadlineWatcherInterval = setInterval(() => {
     handleDeadlineInputChange();
   }, 500);
@@ -390,7 +385,6 @@ function handleDeadlineInputChange() {
   if (!taskDeadlineInput) return;
   const val = taskDeadlineInput.value.trim();
 
-  // اگه input خالیه و selectedDeadline هم خالیه → کاری نکن
   if (!val) {
     if (selectedDeadline) {
       selectedDeadline = null;
@@ -399,12 +393,10 @@ function handleDeadlineInputChange() {
     return;
   }
 
-  // اگه input پر ولی selectedDeadline خالیه → از input بخون
   if (!selectedDeadline) {
     const parsed = parsePersianDateString(val);
     if (parsed) {
       selectedDeadline = parsed;
-      console.log("✅ selectedDeadline from watcher:", selectedDeadline);
       updateClearDeadlineBtn(true);
     }
   }
@@ -511,11 +503,10 @@ function getDeadlineStatus(deadline) {
 function openDatabase() {
   try {
     const request = window.indexedDB.open("To do", 6);
-    request.onerror = (e) => {
+    request.onerror = () => {
       showToast("خطا در باز کردن دیتابیس", "danger");
       hideLoader();
     };
-    request.onblocked = () => {};
     request.onsuccess = () => {
       db = request.result;
       try {
@@ -548,11 +539,9 @@ function openDatabase() {
    CRUD
    ============================================================ */
 function getDeadlineForSave() {
-  // اول از selectedDeadline
   if (selectedDeadline instanceof Date && !isNaN(selectedDeadline.getTime())) {
     return selectedDeadline;
   }
-  // اگه خالی بود، از input بخون
   if (taskDeadlineInput && taskDeadlineInput.value.trim()) {
     const parsed = parsePersianDateString(taskDeadlineInput.value);
     if (parsed) return parsed;
@@ -565,8 +554,6 @@ function addData(callback) {
   try {
     const priceValue = parsePrice(taskPriceInput?.value || "");
     const deadlineToSave = getDeadlineForSave();
-
-    console.log("💾 addData: deadlineToSave =", deadlineToSave);
 
     const newItem = {
       Title: titleTaskinput.value.trim(),
@@ -588,7 +575,6 @@ function addData(callback) {
     tx.oncomplete = () => { callback?.(); displayData(); };
     tx.onerror = () => showToast("خطا در ذخیره یادداشت", "danger");
   } catch (e) {
-    console.error("addData error:", e);
     showToast("خطا در ذخیره یادداشت", "danger");
   }
 }
@@ -611,7 +597,7 @@ function updateTask(id, updates, callback) {
         displayData();
       };
     };
-  } catch (e) { console.error("updateTask error:", e); }
+  } catch (e) {}
 }
 
 function updateTaskStatus(id, completed) {
@@ -757,10 +743,10 @@ function displayData() {
       visibleCount++;
       try {
         from.appendChild(buildTaskElement({ taskId, title, description, price, completed, createdAt, deadline }));
-      } catch (err) { console.error("buildTaskElement error:", err); }
+      } catch (err) {}
       cursor.continue();
     };
-  } catch (e) { console.error("displayData error:", e); }
+  } catch (e) {}
 }
 
 /* ============================================================
@@ -1045,7 +1031,7 @@ function updateStats(total, done, urgent) {
 }
 
 /* ============================================================
-   فاکتور و اشتراک‌گذاری
+   فاکتور
    ============================================================ */
 async function openInvoicePreview(taskId) {
   const task = await getTaskById(taskId);
@@ -1073,7 +1059,6 @@ function buildInvoiceHTML(task) {
   const createdAt = task.createdAt ? new Date(task.createdAt) : new Date();
   const deadline = task.deadline ? new Date(task.deadline) : null;
   const invoiceNo = "INV-" + String(task.id).padStart(6, "0");
-
   const ff = "'Vazirmatn','Vazir','IRANSans',Tahoma,Arial,sans-serif";
 
   const row = (label, value, bold) => `
@@ -1097,14 +1082,11 @@ function buildInvoiceHTML(task) {
       <span style="font-size:18px;font-weight:800;color:#059669;letter-spacing:0;white-space:nowrap;direction:rtl;">${formatPrice(price)} <span style="font-size:11px;font-weight:500;opacity:0.85;">تومان</span></span>
     </div>` : "";
 
-  const subLine = STORE_TAGLINE ? `<p dir="rtl" lang="fa" style="font-family:${ff};font-size:12px;color:#ffffff;opacity:0.9;margin:0 0 14px 0;line-height:1.5;direction:rtl;text-align:right;letter-spacing:0;">${STORE_TAGLINE}</p>` : "";
-
   return `
     <div class="invoice-card" id="invoiceCard" dir="rtl" lang="fa" style="width:100%;max-width:100%;background:#ffffff;color:#1e293b;font-family:${ff};border-radius:20px;overflow:hidden;direction:rtl;text-align:right;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
 
       <div class="invoice-header" style="background:linear-gradient(135deg,#1e40af 0%,#2563eb 50%,#3b82f6 100%);color:#ffffff;padding:24px 22px;direction:rtl;position:relative;">
         <h1 class="invoice-store-name" dir="rtl" lang="fa" style="font-family:${ff};font-size:22px;font-weight:800;margin:0 0 8px 0;padding:0;color:#ffffff;line-height:1.7;letter-spacing:0;word-spacing:0;direction:rtl;text-align:right;white-space:nowrap;overflow:visible;">${STORE_NAME}</h1>
-        ${subLine}
         <span dir="rtl" lang="fa" style="display:inline-block;background:rgba(255,255,255,0.22);color:#ffffff;padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.4);font-family:${ff};letter-spacing:0;">✅ فاکتور رسمی</span>
       </div>
 
@@ -1140,7 +1122,6 @@ function buildInvoiceHTML(task) {
       <div dir="rtl" style="padding:16px 22px 20px;background:#f8fafc;text-align:center;border-top:1px dashed #cbd5e1;font-family:${ff};direction:rtl;">
         <p dir="rtl" lang="fa" style="font-size:14px;font-weight:800;color:#1e40af;margin:0 0 6px 0;font-family:${ff};letter-spacing:0;">سپاس از خرید شما سپاسگزاریم</p>
         <p dir="rtl" lang="fa" style="font-size:11px;color:#64748b;margin:0;line-height:1.8;font-family:${ff};letter-spacing:0;">جهت سفارشات بیشتر و پیگیری با ما در تماس باشید</p>
-    
       </div>
 
     </div>
@@ -1357,6 +1338,85 @@ async function scheduleAllDeadlineTimers() {
 }
 
 /* ============================================================
+   PWA Install Popup
+   ============================================================ */
+let deferredPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log("✅ Install prompt captured");
+  setTimeout(showPwaPopup, 2000);
+});
+
+window.addEventListener("appinstalled", () => {
+  console.log("🎉 PWA installed");
+  hidePwaPopup();
+  localStorage.setItem("pwa-install-dismissed", "true");
+  showToast("اپ با موفقیت نصب شد 🎉", "success");
+});
+
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches ||
+         window.navigator.standalone === true;
+}
+
+function showPwaPopup() {
+  if (isStandalone()) return;
+  if (localStorage.getItem("pwa-install-dismissed") === "true") return;
+
+  const popup = document.getElementById("pwaInstallPopup");
+  const installBtn = document.getElementById("pwaInstallBtn");
+  const iosSteps = document.getElementById("pwaIosInstructions");
+  if (!popup) return;
+
+  if (isIOS()) {
+    installBtn.classList.add("dis-hide");
+    iosSteps.classList.remove("dis-hide");
+  } else if (deferredPrompt) {
+    installBtn.classList.remove("dis-hide");
+    iosSteps.classList.add("dis-hide");
+  } else {
+    return;
+  }
+
+  popup.classList.remove("dis-hide");
+}
+
+function hidePwaPopup() {
+  document.getElementById("pwaInstallPopup")?.classList.add("dis-hide");
+}
+
+document.getElementById("pwaInstallBtn")?.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  console.log("Install outcome:", outcome);
+  if (outcome === "accepted") {
+    hidePwaPopup();
+    localStorage.setItem("pwa-install-dismissed", "true");
+  }
+  deferredPrompt = null;
+});
+
+document.getElementById("pwaCloseBtn")?.addEventListener("click", () => {
+  hidePwaPopup();
+  localStorage.setItem("pwa-install-dismissed", "true");
+});
+
+window.addEventListener("load", () => {
+  if (isIOS() && !isStandalone()) {
+    if (localStorage.getItem("pwa-install-dismissed") !== "true") {
+      setTimeout(showPwaPopup, 3000);
+    }
+  }
+});
+
+/* ============================================================
    رویدادها
    ============================================================ */
 function bindEvents() {
@@ -1389,8 +1449,6 @@ function bindEvents() {
     }
     const priceValue = parsePrice(taskPriceInput?.value || "");
     const deadlineToSave = getDeadlineForSave();
-
-    console.log("💾 create2: deadlineToSave =", deadlineToSave);
 
     if (editingTaskId !== null) {
       updateTask(editingTaskId, {
@@ -1465,7 +1523,6 @@ function bindEvents() {
   });
 
   enableNotifBtn?.addEventListener("click", toggleNotifications);
-
   exportPdfBtn?.addEventListener("click", generateInvoicePDF);
 
   document.addEventListener("visibilitychange", () => {
@@ -1554,8 +1611,6 @@ async function generateInvoicePDF() {
     doc.setFontSize(20);
     if (fontLoaded) doc.setFont("Vazirmatn", "normal");
     doc.text(STORE_NAME, pageW - margin, 15, { align: "right" });
-    doc.setFontSize(10);
-    if (STORE_TAGLINE) doc.text(STORE_TAGLINE, pageW - margin, 23, { align: "right" });
     doc.setFontSize(9);
     doc.text(`تاریخ: ${formatPersianDateTime(new Date())}`, pageW - margin, 31, { align: "right" });
     let y = 45;
@@ -1652,23 +1707,9 @@ async function generateInvoicePDF() {
     doc.save(fileName);
     showToast("فاکتور PDF دانلود شد ✅", "success");
   } catch (err) {
-    console.error("PDF error:", err);
     showToast("خطا در ساخت فاکتور", "danger");
   }
 }
-
-/* ============================================================
-   PWA Install
-   ============================================================ */
-let deferredPrompt = null;
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-});
-window.addEventListener("appinstalled", () => {
-  showToast("اپ با موفقیت نصب شد 🎉", "success");
-  deferredPrompt = null;
-});
 
 /* ============================================================
    Scroll
@@ -1696,8 +1737,6 @@ function init() {
   console.log("🚀 init()");
 
   try { bindEvents(); } catch (e) { console.error("bindEvents:", e); }
-
-  // 👈 شروع نظارت روی input تاریخ
   try { startDeadlineWatcher(); } catch (e) { console.error("deadlineWatcher:", e); }
 
   notifEnabled = loadNotifPref();

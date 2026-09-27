@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#2563eb">
     <meta name="format-detection" content="telephone=no">
     <title>یادداشت‌یار — مدیریت کارها</title>
+
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -14,15 +16,33 @@
     <link rel="icon" type="image/png" sizes="192x192" href="assets/img/maskable-512.png">
     <link rel="icon" type="image/png" sizes="512x512" href="assets/img/maskable-512.png">
 
+    <!-- فونت وزیرمتن -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- تقویم شمسی -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+
+    <!-- استایل‌های اصلی -->
     <link rel="stylesheet" href="assets/css/style.css">
 
-    <!-- ============================================================
-         استایل فاکتور — فقط برای پیش‌نمایش داخل اپ
-         (خروجی تصویر از inline styles استفاده می‌کنه)
-         ============================================================ -->
+
+        <!-- ============ OneSignal Push Notifications ============ -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "ead9d769-8804-443c-9f2b-20ca882fbb7c",
+          notifyButton: { enable: false },
+          allowLocalhostAsSecureOrigin: true,
+        });
+        console.log("✅ OneSignal initialized");
+      });
+    </script>
+
     <style>
       /* فاکتور — پیش‌نمایش درون اپ */
       .invoice-card {
@@ -89,7 +109,6 @@
         white-space: nowrap;
         overflow: visible;
         line-height: 1.6;
-        text-rendering: geometricPrecision;
       }
       .invoice-store-sub {
         font-family: 'Vazirmatn', 'Vazir', Tahoma, sans-serif;
@@ -277,13 +296,6 @@
         line-height: 1.8;
         letter-spacing: 0 !important;
       }
-      .invoice-footer .watermark {
-        font-size: 9px;
-        color: #94a3b8;
-        margin-top: 10px;
-        opacity: 0.7;
-        letter-spacing: 0 !important;
-      }
       .invoice-divider {
         height: 4px;
         background: repeating-linear-gradient(
@@ -365,7 +377,156 @@
         width: 420px;
         max-width: 100%;
       }
+
+      /* ============ PWA Install Popup ============ */
+      .pwa-popup {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: pwaFade 0.3s ease;
+      }
+      @keyframes pwaFade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .pwa-popup-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 28px 22px;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        position: relative;
+        animation: pwaSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        direction: rtl;
+      }
+      body.dark-background .pwa-popup-card {
+        background: #1e293b;
+        color: #f1f5f9;
+      }
+      @keyframes pwaSlide {
+        from { opacity: 0; transform: translateY(30px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .pwa-close {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s ease;
+      }
+      .pwa-close:hover {
+        background: rgba(0,0,0,0.05);
+        color: #0f172a;
+      }
+      body.dark-background .pwa-close:hover {
+        background: rgba(255,255,255,0.1);
+        color: #f1f5f9;
+      }
+      .pwa-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+        object-fit: cover;
+      }
+      .pwa-popup-card h3 {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0 0 8px;
+        color: #0f172a;
+      }
+      body.dark-background .pwa-popup-card h3 { color: #f1f5f9; }
+      .pwa-popup-card > p {
+        font-size: 14px;
+        color: #64748b;
+        line-height: 1.8;
+        margin: 0 0 20px;
+      }
+      body.dark-background .pwa-popup-card > p { color: #cbd5e1; }
+      .pwa-btn {
+        width: 100%;
+        min-height: 50px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        border: none;
+        color: #fff;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        font-family: inherit;
+      }
+      .pwa-btn:active { transform: scale(0.97); }
+      .pwa-ios-steps {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        background: rgba(37, 99, 235, 0.06);
+        border-radius: 16px;
+        padding: 18px 16px;
+      }
+      body.dark-background .pwa-ios-steps {
+        background: rgba(59, 130, 246, 0.12);
+      }
+      .pwa-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .pwa-step-num {
+        min-width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .pwa-step p {
+        margin: 0;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.8;
+      }
+      body.dark-background .pwa-step p { color: #cbd5e1; }
+      .pwa-step strong { color: #0f172a; }
+      body.dark-background .pwa-step strong { color: #f1f5f9; }
     </style>
+
+
+
+
+
+
   </head>
   <body>
 
@@ -533,17 +694,47 @@
     <!-- Toast -->
     <div id="toast-container"></div>
 
-  
-    <pwa-install use-local-storage="true" install-description="برای تجربه بهتر، اپ ما را نصب کنید!"></pwa-install>
-  </body> <!-- Scripts -->
+    <!-- ============ PWA Install Popup ============ -->
+    <div id="pwaInstallPopup" class="pwa-popup dis-hide">
+      <div class="pwa-popup-card">
+        <button class="pwa-close" id="pwaCloseBtn" type="button" aria-label="بستن">
+          <i class="bi bi-x-lg"></i>
+        </button>
+        <img src="assets/img/maskable-512.png" alt="یادداشت‌یار" class="pwa-icon">
+        <h3>نصب یادداشت‌یار</h3>
+        <p>برای دسترسی سریع‌تر و کار در حالت آفلاین، این برنامه را روی صفحه اصلی خود نصب کنید.</p>
+
+        <button id="pwaInstallBtn" class="pwa-btn dis-hide" type="button">
+          <i class="bi bi-download"></i>
+          نصب برنامه
+        </button>
+
+        <div id="pwaIosInstructions" class="pwa-ios-steps dis-hide">
+          <div class="pwa-step">
+            <span class="pwa-step-num">1</span>
+            <p>روی دکمه <strong>Share</strong> <i class="bi bi-box-arrow-up"></i> در پایین ضربه بزنید</p>
+          </div>
+          <div class="pwa-step">
+            <span class="pwa-step-num">2</span>
+            <p>گزینه <strong>Add to Home Screen</strong> را انتخاب کنید</p>
+          </div>
+          <div class="pwa-step">
+            <span class="pwa-step-num">3</span>
+            <p>روی <strong>Add</strong> در بالای صفحه بزنید</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Scripts ============ -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+    <!-- App.js -->
     <script src="assets/js/app.js"></script>
 
-    <!-- pwa installer -->
-     <script type="module" src="https://cdn.jsdelivr.net/npm/@khmyznikov/pwa-install@latest/dist/index.min.js"></script>
+  </body>
 </html>
