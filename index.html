@@ -533,7 +533,9 @@
     <!-- Toast -->
     <div id="toast-container"></div>
 
-    <!-- Scripts -->
+  
+    <pwa-install use-local-storage="true" install-description="برای تجربه بهتر، اپ ما را نصب کنید!"></pwa-install>
+  </body> <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
@@ -541,5 +543,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script src="assets/js/app.js"></script>
-  </body>
+
+    <!-- pwa installer -->
+     <script type="module" src="https://cdn.jsdelivr.net/npm/@khmyznikov/pwa-install@latest/dist/index.min.js"></script>
 </html>
