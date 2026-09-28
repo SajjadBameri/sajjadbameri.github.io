@@ -10,8 +10,9 @@
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="یادداشت‌یار">
+    <meta name="apple-mobile-web-app-title" content="کارنگار">
     <link rel="apple-touch-icon" href="assets/img/maskable-512.png">
     <link rel="icon" type="image/png" sizes="192x192" href="assets/img/maskable-512.png">
     <link rel="icon" type="image/png" sizes="512x512" href="assets/img/maskable-512.png">
@@ -28,23 +29,10 @@
     <!-- استایل‌های اصلی -->
     <link rel="stylesheet" href="assets/css/style.css">
 
-
-        <!-- ============ OneSignal Push Notifications ============ -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "ead9d769-8804-443c-9f2b-20ca882fbb7c",
-          notifyButton: { enable: false },
-          allowLocalhostAsSecureOrigin: true,
-        });
-        console.log("✅ OneSignal initialized");
-      });
-    </script>
-
     <style>
-      /* فاکتور — پیش‌نمایش درون اپ */
+      /* ============================================================
+         فاکتور — پیش‌نمایش درون اپ
+         ============================================================ */
       .invoice-card {
         width: 100%;
         background: #ffffff;
@@ -296,19 +284,10 @@
         line-height: 1.8;
         letter-spacing: 0 !important;
       }
-      .invoice-divider {
-        height: 4px;
-        background: repeating-linear-gradient(
-          90deg,
-          #2563eb 0px, #2563eb 10px,
-          transparent 10px, transparent 20px,
-          #10b981 20px, #10b981 30px,
-          transparent 30px, transparent 40px
-        );
-        opacity: 0.15;
-      }
 
-      /* Invoice Preview Modal */
+      /* ============================================================
+         Invoice Preview Modal
+         ============================================================ */
       .invoice-preview-modal {
         position: fixed;
         inset: 0;
@@ -378,7 +357,9 @@
         max-width: 100%;
       }
 
-      /* ============ PWA Install Popup ============ */
+      /* ============================================================
+         PWA Install Popup
+         ============================================================ */
       .pwa-popup {
         position: fixed;
         inset: 0;
@@ -521,12 +502,6 @@
       .pwa-step strong { color: #0f172a; }
       body.dark-background .pwa-step strong { color: #f1f5f9; }
     </style>
-
-
-
-
-
-
   </head>
   <body>
 
@@ -691,17 +666,14 @@
       </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast-container"></div>
-
     <!-- ============ PWA Install Popup ============ -->
     <div id="pwaInstallPopup" class="pwa-popup dis-hide">
       <div class="pwa-popup-card">
         <button class="pwa-close" id="pwaCloseBtn" type="button" aria-label="بستن">
           <i class="bi bi-x-lg"></i>
         </button>
-        <img src="assets/img/maskable-512.png" alt="یادداشت‌یار" class="pwa-icon">
-        <h3>نصب یادداشت‌یار</h3>
+        <img src="assets/img/maskable-512.png" alt="کارنگار" class="pwa-icon">
+        <h3>نصب کارنگار</h3>
         <p>برای دسترسی سریع‌تر و کار در حالت آفلاین، این برنامه را روی صفحه اصلی خود نصب کنید.</p>
 
         <button id="pwaInstallBtn" class="pwa-btn dis-hide" type="button">
@@ -725,6 +697,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast -->
+    <div id="toast-container"></div>
 
     <!-- ============ Scripts ============ -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

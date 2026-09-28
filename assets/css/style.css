@@ -1,6 +1,5 @@
 /* ============================================================
-   یادداشت‌یار — استایل اصلی
-   (فاکتور در style داخلی index.html قرار دارد)
+   کارنگار — استایل اصلی
    ============================================================ */
 
 /* ============ Utility ============ */
@@ -123,7 +122,7 @@ button, input, textarea {
   padding: 10px 12px 0;
 }
 
-/* ============ Header (بهبود یافته) ============ */
+/* ============ Header (Fixed) ============ */
 .app-header {
   position: fixed;
   top: max(12px, env(safe-area-inset-top, 0px));
@@ -168,9 +167,7 @@ button, input, textarea {
   flex-shrink: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.brand-logo:active {
-  transform: scale(0.95);
-}
+.brand-logo:active { transform: scale(0.95); }
 .brand-logo img {
   width: 100%;
   height: 100%;
@@ -216,9 +213,7 @@ button, input, textarea {
   background: #fff;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
-.search-wrap:focus-within > i {
-  color: var(--primary);
-}
+.search-wrap:focus-within > i { color: var(--primary); }
 body.dark-background .search-input:focus {
   background: rgba(15, 23, 42, 0.9);
 }
@@ -250,35 +245,23 @@ body.dark-background .search-input:focus {
   position: relative;
   overflow: hidden;
 }
-.action-chip:active {
-  transform: scale(0.96);
-}
-.action-chip i {
-  font-size: 16px;
-  transition: color 0.2s ease;
-}
-.action-chip span {
-  transition: color 0.2s ease;
-}
+.action-chip:active { transform: scale(0.96); }
+.action-chip i { font-size: 16px; transition: color 0.2s ease; }
+.action-chip span { transition: color 0.2s ease; }
 .action-chip:hover {
   border-color: var(--primary);
   color: var(--primary);
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
 }
-.action-chip:hover i {
-  color: var(--primary);
-}
+.action-chip:hover i { color: var(--primary); }
 
-/* حالت فعال دکمه اعلان */
 .action-chip#enableNotif.active {
   background: linear-gradient(135deg, var(--success), var(--success-dark));
   border-color: transparent;
   color: #fff;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
 }
-.action-chip#enableNotif.active i {
-  color: #fff;
-}
+.action-chip#enableNotif.active i { color: #fff; }
 .action-chip#enableNotif.active:hover {
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
 }
@@ -293,7 +276,7 @@ body.dark-background .search-input:focus {
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 14px;
-  padding-top: 135px;
+  padding-top: 135px; /* برای هدر fixed */
 }
 
 .stat-card {
@@ -980,9 +963,7 @@ body.dark-background .datepicker-plot-area .datepicker-header { background: #334
     border-radius: 18px;
     gap: 10px;
   }
-  .app-header.scrolled {
-    padding: 9px 12px;
-  }
+  .app-header.scrolled { padding: 9px 12px; }
   .brand-logo {
     width: 42px;
     height: 42px;
@@ -995,10 +976,7 @@ body.dark-background .datepicker-plot-area .datepicker-header { background: #334
     padding: 0 40px 0 14px;
     border-radius: 12px;
   }
-  .search-wrap > i {
-    right: 14px;
-    font-size: 15px;
-  }
+  .search-wrap > i { right: 14px; font-size: 15px; }
   .action-chip span { display: none; }
   .action-chip {
     gap: 0;
@@ -1037,9 +1015,7 @@ body.dark-background .datepicker-plot-area .datepicker-header { background: #334
     padding: 14px 18px;
     border-radius: 22px;
   }
-  .app-header.scrolled {
-    padding: 12px 18px;
-  }
+  .app-header.scrolled { padding: 12px 18px; }
   .header-top { margin-bottom: 0; }
   .header-actions {
     display: flex;

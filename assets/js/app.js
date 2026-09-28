@@ -218,10 +218,13 @@ async function enableNotifications() {
 
     if (swRegistration && "periodicSync" in swRegistration) {
       try {
-        await swRegistration.periodicSync.register("deadline-check", {
-          minInterval: 24 * 60 * 60 * 1000,
+        await swRegistration.periodicSync.register("check-deadlines", {
+          minInterval: 60 * 60 * 1000,
         });
-      } catch (err) {}
+        console.log("[App] ✅ Periodic Sync registered");
+      } catch (err) {
+        console.warn("[App] Periodic Sync not available:", err);
+      }
     }
 
     setTimeout(() => {
@@ -233,7 +236,7 @@ async function enableNotifications() {
           vibrate: [200, 100, 200],
           tag: "test-enabled",
           requireInteraction: false,
-        });
+        }).catch(() => {});
       }
     }, 800);
 
@@ -257,7 +260,7 @@ function disableNotifications() {
   notifiedTasks.clear();
   if (swRegistration && "periodicSync" in swRegistration) {
     try {
-      swRegistration.periodicSync.unregister("deadline-check").catch(() => {});
+      swRegistration.periodicSync.unregister("check-deadlines").catch(() => {});
     } catch (err) {}
   }
   showToast("نوتیفیکیشن خاموش شد 🔕", "info");
@@ -275,16 +278,18 @@ async function registerSW() {
   if (!("serviceWorker" in navigator)) return;
   try {
     swRegistration = await navigator.serviceWorker.register("./service-worker.js");
+    console.log("[App] ✅ SW registered");
+
     if (notifEnabled && "periodicSync" in swRegistration) {
       try {
-        await swRegistration.periodicSync.register("deadline-check", {
-          minInterval: 24 * 60 * 60 * 1000,
+        await swRegistration.periodicSync.register("check-deadlines", {
+          minInterval: 60 * 60 * 1000,
         });
       } catch (err) {}
     }
     navigator.serviceWorker.addEventListener("message", handleSWMessage);
   } catch (err) {
-    console.warn("SW registration failed:", err);
+    console.warn("[App] SW registration failed:", err);
   }
 }
 
@@ -1205,7 +1210,7 @@ function downloadInvoiceImage(fileName) {
 }
 
 /* ============================================================
-   نوتیفیکیشن
+   نوتیفیکیشن (محلی)
    ============================================================ */
 function scheduleDeadlineTimer(taskId, deadline, title) {
   if (!notifEnabled) return;
@@ -1253,8 +1258,12 @@ function cancelNotifTimer(taskId) {
 
 async function sendDeadlineNotification(taskId, title, isOverdue) {
   if (!notifEnabled) return;
-  const notifTitle = isOverdue ? "🔴 موعد تسک رسید!" : "⏰ یادآوری تسک";
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  const notifTitle = isOverdue ? "🔴 موعد کار رسید!" : "⏰ یادآوری کار";
   const notifBody = `"${title}" هنوز انجام نشده`;
+
   if (swRegistration && "showNotification" in swRegistration) {
     try {
       await swRegistration.showNotification(notifTitle, {
@@ -1271,7 +1280,9 @@ async function sendDeadlineNotification(taskId, title, isOverdue) {
           { action: "snooze", title: "⏰ ۲ ساعت بعد" },
         ],
       });
-    } catch (err) { sendBasicNotification(notifTitle, notifBody, taskId); }
+    } catch (err) {
+      sendBasicNotification(notifTitle, notifBody, taskId);
+    }
   } else {
     sendBasicNotification(notifTitle, notifBody, taskId);
   }
@@ -1338,7 +1349,7 @@ async function scheduleAllDeadlineTimers() {
 }
 
 /* ============================================================
-   PWA Install Popup
+   PWA Install Popup — نسخه بهبودیافته برای همه پلتفرم‌ها
    ============================================================ */
 let deferredPrompt = null;
 
@@ -1346,7 +1357,9 @@ window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
   console.log("✅ Install prompt captured");
-  setTimeout(showPwaPopup, 2000);
+  if (localStorage.getItem("pwa-install-dismissed") !== "true") {
+    setTimeout(showPwaPopup, 1500);
+  }
 });
 
 window.addEventListener("appinstalled", () => {
@@ -1357,7 +1370,8 @@ window.addEventListener("appinstalled", () => {
 });
 
 function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
 function isStandalone() {
@@ -1366,25 +1380,37 @@ function isStandalone() {
 }
 
 function showPwaPopup() {
-  if (isStandalone()) return;
-  if (localStorage.getItem("pwa-install-dismissed") === "true") return;
+  if (isStandalone()) {
+    console.log("[PWA] Already installed");
+    return;
+  }
+  if (localStorage.getItem("pwa-install-dismissed") === "true") {
+    console.log("[PWA] User dismissed before");
+    return;
+  }
 
   const popup = document.getElementById("pwaInstallPopup");
   const installBtn = document.getElementById("pwaInstallBtn");
   const iosSteps = document.getElementById("pwaIosInstructions");
-  if (!popup) return;
-
-  if (isIOS()) {
-    installBtn.classList.add("dis-hide");
-    iosSteps.classList.remove("dis-hide");
-  } else if (deferredPrompt) {
-    installBtn.classList.remove("dis-hide");
-    iosSteps.classList.add("dis-hide");
-  } else {
+  if (!popup) {
+    console.warn("[PWA] Popup element missing");
     return;
   }
 
+  // ریست هر دو
+  installBtn.classList.add("dis-hide");
+  iosSteps.classList.add("dis-hide");
+
+  if (isIOS()) {
+    console.log("[PWA] iOS mode → instructions");
+    iosSteps.classList.remove("dis-hide");
+  } else {
+    console.log("[PWA] Non-iOS mode → install button");
+    installBtn.classList.remove("dis-hide");
+  }
+
   popup.classList.remove("dis-hide");
+  console.log("[PWA] Popup shown");
 }
 
 function hidePwaPopup() {
@@ -1392,10 +1418,14 @@ function hidePwaPopup() {
 }
 
 document.getElementById("pwaInstallBtn")?.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
+  if (!deferredPrompt) {
+    console.log("[PWA] No deferredPrompt — showing manual instructions");
+    showToast("برای نصب، از منوی مرورگر گزینه Add to Home Screen رو بزن", "info");
+    return;
+  }
   deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
-  console.log("Install outcome:", outcome);
+  console.log("[PWA] Install outcome:", outcome);
   if (outcome === "accepted") {
     hidePwaPopup();
     localStorage.setItem("pwa-install-dismissed", "true");
@@ -1408,12 +1438,13 @@ document.getElementById("pwaCloseBtn")?.addEventListener("click", () => {
   localStorage.setItem("pwa-install-dismissed", "true");
 });
 
+// نمایش خودکار پاپ‌آپ روی همه پلتفرم‌ها بعد ۳ ثانیه
 window.addEventListener("load", () => {
-  if (isIOS() && !isStandalone()) {
-    if (localStorage.getItem("pwa-install-dismissed") !== "true") {
-      setTimeout(showPwaPopup, 3000);
+  setTimeout(() => {
+    if (!isStandalone() && localStorage.getItem("pwa-install-dismissed") !== "true") {
+      showPwaPopup();
     }
-  }
+  }, 3000);
 });
 
 /* ============================================================
@@ -1700,7 +1731,7 @@ async function generateInvoicePDF() {
       doc.line(margin, pageH - 15, pageW - margin, pageH - 15);
       doc.setTextColor(148, 163, 184);
       doc.setFontSize(8);
-      doc.text("یادداشت‌یار — فاکتور خودکار", margin, pageH - 9, { align: "left" });
+      doc.text("کارنگار — فاکتور خودکار", margin, pageH - 9, { align: "left" });
       doc.text(`صفحه ${p} از ${totalPages}`, pageW - margin, pageH - 9, { align: "right" });
     }
     const fileName = `invoice-${new Date().toISOString().slice(0, 10)}.pdf`;
